@@ -23,6 +23,9 @@ const Calendar = ({ month, year, preloadedEvents = [] }) => {
 
   const parsedEvents = parseEvents(preloadedEvents);
   const [events, setEvents] = useState(parsedEvents);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const eventsValues = Object.values(events);
 
   const showToast = ({ message, type, timeout = 2500 }) => {
     setToast({ message, type });
@@ -82,7 +85,18 @@ const Calendar = ({ month, year, preloadedEvents = [] }) => {
   useEffect(() => {
     // This useEffect will keep track of changes in dates to display new events.
     // When we get changes, retrieve from backend the events.
-  }, []);
+
+    const controller = new AbortController();
+    setLoading(true);
+    fetch("url", { signal: controller.signal })
+      .then(setEvents)
+      .catch(setError)
+      .finally(() => setLoading(false));
+
+    return () => {
+      controller.abort();
+    };
+  }, [eventsValues]);
 
   return (
     <div className="calendar">
